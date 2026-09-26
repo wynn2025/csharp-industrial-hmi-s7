@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>annotations</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>GaugeDemo</RootNamespace>
+    <AssemblyName>GaugeDemo</AssemblyName>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AppConfig>App.config</AppConfig>
+    <!-- resx 含图片等非字符串资源：需 preserialized 资源 + System.Resources.Extensions（MSB3822/3823） -->
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 参考旧代码/PLC 接口文档/测试工具目录不参与编译（_test\DbProbe 是独立工程，其 obj 不可混入） -->
+    <Compile Remove="_PLC接口\**" />
+    <Compile Remove="_参考_旧代码\**" />
+    <Compile Remove="_test\**" />
+    <EmbeddedResource Remove="_PLC接口\**" />
+    <EmbeddedResource Remove="_参考_旧代码\**" />
+    <EmbeddedResource Remove="_test\**" />
+    <None Remove="_PLC接口\**" />
+    <None Include="_参考_旧代码\**" CopyToOutputDirectory="Never" />
+    <None Include="_PLC接口\**" CopyToOutputDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- net48 框架程序集：Microsoft.VisualBasic 提供 InputBox 简易输入框；System.Net.Http 供 HttpClient -->
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="S7netplus" Version="0.20.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.1" />
+    <!-- net48 用 System.Data.SQLite（原生 Interop，无 System.Memory 绑定链问题；Microsoft.Data.Sqlite 6 在 net48 下 SQLitePCLRaw 绑定 4.0.1.1 失败） -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118.6" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- net48 + ImplicitUsings 下显式补 WinForms 全局 using，不依赖 SDK 行为 -->
+    <Using Include="System.Drawing" />
+    <Using Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- resx 清单名绑定到类全名（FormMain 类在 GaugeDemo300 命名空间但文件在 Forms\ 目录，
+         SDK 按目录推导会嵌入为 GaugeDemo300.Forms.FormMain.resources，
+         而 WinForms 运行时按类全名找 GaugeDemo300.FormMain.resources → MissingManifestResource） -->
+    <EmbeddedResource Update="Forms\FormMain.resx">
+      <LogicalName>GaugeDemo300.FormMain.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 编译时自动复制 logo 和布局图到输出目录（防止清 bin 后丢失） -->
+  </ItemGroup>
+</Project>
